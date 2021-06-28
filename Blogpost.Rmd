@@ -1,0 +1,191 @@
+---
+title: "Blogpost"
+author: "xx"
+date: "28 Juni 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+getwd()
+```
+
+```{r}
+# Clean environment 
+ rm(list = ls())  
+
+# Installing packages 
+# install.packages("pacman", repos = "http://cran.us.r-project.org")
+library(pacman)
+library("RColorBrewer")
+p_load(ggplot2,    
+       cowplot,   
+       stargazer, 
+       glmnet,    
+       pROC,      
+       caret,       
+       rpart,        
+       rpart.plot,
+       moments)
+
+# Reading in the data
+spam <- read.csv("spam7.csv", sep = ",", stringsAsFactors = T, header = T)
+```
+## Description of the Dataset:
+Our topic is spam email data and our task is to predict whether an email is a spam or not. The data consist of 4601 email items, of which 1813 items were identified as spam. There are 6 prediators, which are the following:
+* the total length of words in capitals (crl.tot)
+* the number of occurrences of the \$ symbol (dollar)
+* the number of occurrences of the ! symbol (bang)
+* the number of occurrences of the word ‘money’ (money)
+* the number of occurrences of the string ‘000’ (n000)
+* the number of occurrences of the word ‘make’ (make)
+and 1 target variable, which is a factor with levels n not spam, y spam (yesno).
+
+## Problems in the Dataset:
+### 0 values
+First of all, we noticed that there are many 0 values in the dataset, we have considered, if we treat them as missing values or real values. Because there are just too much 0s, for example in the column "dollar", there are more than 2 times 0 values than other values. Considering the fact that, in many emails there is just no dollar symbol, we decide to take them as real values and do not handle them.
+
+### Missing values, outliers, skewed distribution and new features
+* There is no missing value in our dataset, either explicit nor implicit.
+* There are many outliers. Take the column "crl.tot" as an example, we can see from the follwing plot that, the plot has a really long tail and most of the values are between 0-500.
+
+```{r}
+zScores <- function(var){
+    mu <- mean(var)
+    sd <-  sd(var)
+    scores <- (var - mu)/sd
+    return(scores)
+}
+
+ggplot(spam, aes(crl.tot)) +
+          geom_density(na.rm = T,
+                       alpha = 0.15,
+                       fill  = "royalblue",
+                       colour = "grey50") +
+          labs(title = "Total length of words in capitals_original") +
+          theme(plot.title = element_text(color = "royalblue4", size = 12, face = "bold", hjust = 0.5))
+
+```
+so we used Zscore and created new column "crl.tot_tr" so that we can better deal with the realtionship between different predicators and the target variable. After getting rid of the outliers, we got the follwing plot:
+```{r}
+for (var in c("crl.tot")) {
+  x <- zScores(spam[[var]])
+  new_var <- paste(var, "tr", sep = "_")
+  spam[[new_var]] <- spam[[var]]
+  spam[[new_var]][x > 3] <- mean(spam[[var]], na.rm = T) + 
+  3*sd(spam[[var]], na.rm = T)
+}
+
+ggplot(spam, aes(crl.tot_tr)) +
+          geom_density(na.rm = T,
+                       alpha = 0.15,
+                       fill  = "coral",
+                       colour = "grey50") +
+          labs(title = "Total length of words in capitals_tr") +
+          theme(plot.title = element_text(color = "royalblue4", size = 12, face = "bold", hjust = 0.5))
+```
+From the plot above, we know that outliers are removed and we also kept the intactness the original data. To better finish the modelling tasks, we changed the skeness and then we got the follwing plot:
+```{r}
+ggplot(spam, aes(log(crl.tot_tr))) +
+          geom_density(na.rm = T,
+                       alpha = 0.15,
+                       fill  = "forestgreen",
+                       colour = "grey50") +
+          labs(title = "Total length of words in capitals_log") +
+          theme(plot.title = element_text(color = "royalblue4", size = 12, face = "bold", hjust = 0.5))
+
+spam$crl.tot_ln <- log(spam$crl.tot_tr) 
+```
+We used the same methods for other variables and created for each variable a truncated variable and a log variable.
+
+```{r}
+for (var in c("dollar", "bang", "money", "n000", "make")) {
+  x <- zScores(spam[[var]])
+  new_var <- paste(var, "tr", sep = "_")
+  spam[[new_var]] <- spam[[var]]
+  spam[[new_var]][x > 3] <- mean(spam[[var]], na.rm = T) + 
+  3*sd(spam[[var]], na.rm = T)
+}
+spam$dollar_ln <- log(spam$dollar_tr+0.00001) 
+spam$bang_ln <- log(spam$bang_tr+0.0001) 
+spam$money_ln <- log(spam$money_tr+0.0001) 
+spam$n000_ln <- log(spam$n000_tr+0.0001) 
+spam$make_ln <- log(spam$make_tr+0.0001) 
+```
+
+
+### The most valuable insights from EDA
+After plotting the relationships between each predicator and the target, it can be easily notice that, generally, the less symbols there are, the more likely that the email is not a spam email. For example, from the plot "The relationship betweeen spam and crl", we can see that, if the eamil is not a spam email, the total length of words in capitals is approximately in the range of 0-400, the average length is about 100. Compared to nonspam eamils, the range of the total length of capitals words in spam emails varies between 0-750. The avarage value is almost 250. It is the same for the reltionships between other predicators and the target.
+
+```{r}
+par(mfrow = c(1,2))
+boxplot(crl.tot_tr~yesno, 
+        data = spam,
+        names    = c("NO", "YES"),
+        col  = c("aquamarine4", "coral2"),
+        xlab = "Are They Spam Email?",
+        ylab = "Total length of words in capitals",
+        main = "The Relationship Between Spam and CRL",
+        cex.lab  = 0.7,
+        cex.main = 0.5)
+
+boxplot(dollar_tr~yesno, 
+        data = spam,
+        ylim   = c(0,0.7),
+        names    = c("NO", "YES"),
+        col  = c("aquamarine4", "coral2"),
+        xlab = "Are They Spam Email?",
+        ylab = "Number of Occurrences of the $ Symbol",
+        main = "The Relationship Between Spam and dollar symbol",
+        cex.lab  = 0.7,
+        cex.main = 0.5)
+
+boxplot(bang_tr~yesno, 
+        data = spam,
+        ylim   = c(0,0.7),
+        names    = c("NO", "YES"),
+        col  = c("aquamarine4", "coral2"),
+        xlab = "Are They Spam Email?",
+        ylab = "Number of Occurrences of the ! Symbol",
+        main = "The Relationship Between Spam and the ! Symbol",
+        cex.lab  = 0.7,
+        cex.main = 0.5)
+
+boxplot(money_tr~yesno, 
+        data = spam,
+        ylim   = c(0,0.7),
+        names    = c("NO", "YES"),
+        col  = c("aquamarine4", "coral2"),
+        xlab = "Are They Spam Email?",
+        ylab = "Number of Occurrences of the Word ‘money’",
+        main = "The Relationship Between Spam and the Word ‘money’",
+        cex.lab  = 0.7,
+        cex.main = 0.5)
+  
+boxplot(n000_tr~yesno, 
+        data = spam,
+        ylim   = c(0,0.7),
+        names    = c("NO", "YES"),
+        col  = c("aquamarine4", "coral2"),
+        xlab = "Are They Spam Email?",
+        ylab = "Number of Occurrences of the String ‘000’",
+        main = "The Relationship Between Spam and the String ‘000’",
+        cex.lab  = 0.7,
+        cex.main = 0.5)
+
+boxplot(make_tr~yesno, 
+        data = spam,
+        ylim   = c(0,0.7),
+        names    = c("NO", "YES"),
+        col  = c("aquamarine4", "coral2"),
+        xlab = "Are They Spam Email?",
+        ylab = "Number of Occurrences of the Word ‘make’",
+        main = "The Relationship Between Spam and Word ‘make’",
+        cex.lab  = 0.7,
+        cex.main = 0.5)
+
+```
+Based on this observation, we can make the conclusion that, if there exist a lot of symbols like dollar, bang, 000 or the word 'money', 'make' in an email or there are a lot of capital words in an email, then this email is very likely a spam email.
