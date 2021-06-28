@@ -74,7 +74,6 @@ ggplot(spam, aes(crl.tot)) +
 so we used Zscore and created new column "crl.tot_tr" so that we can better deal with the realtionship between different predicators and the target variable. After getting rid of the outliers, we got the follwing plot:
 
 
-
 ```{r echo=FALSE, out.width = '80%', out.height = '80%', fig.align='center'}
 for (var in c("crl.tot")) {
   x <- zScores(spam[[var]])
@@ -158,8 +157,6 @@ boxplot(dollar_tr~yesno,
 ```
 
 
-
-
 ```{r echo=FALSE}
 par(mfrow = c(1,2))
 boxplot(bang_tr~yesno, 
@@ -186,8 +183,6 @@ boxplot(money_tr~yesno,
 ```
 
 
-
-
 ```{r echo=FALSE}
 par(mfrow = c(1,2))
 boxplot(n000_tr~yesno, 
@@ -212,8 +207,6 @@ boxplot(make_tr~yesno,
         cex.lab  = 0.7,
         cex.main = 0.7)
 ```
-
-
 
 
 Based on this observation, we can make the conclusion that, if there exist a lot of symbols like dollar, bang, 000 or the word 'money', 'make' in an email or there are a lot of capital words in an email, then this email is very likely a spam email.
