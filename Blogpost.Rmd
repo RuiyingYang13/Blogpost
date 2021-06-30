@@ -2,7 +2,9 @@
 title: "Blogpost"
 author: "xx"
 date: "28 Juni 2021"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -210,3 +212,95 @@ boxplot(make_tr~yesno,
 
 
 Based on this observation, we can make the conclusion that, if there exist a lot of symbols like dollar, bang, 000 or the word 'money', 'make' in an email or there are a lot of capital words in an email, then this email is very likely a spam email.
+
+## Training Models
+
+### Method
+Because our models have to classify whether an email is spam or not Logistic Regression and Decision Trees are appropriate methods.
+In the first step we thought about the right predictor sets and decided on four different. For all we used the log variables as predictors.
+
+Predictor Set 1 = {money, make, crl.tot} - A set based on occurrence of the different letter sequences.
+
+Predictor Set 2 = {dollar, bang} - A set based on the occurrence of the symbols $ and !.
+
+Predictor Set 3 = {dollar, money, n000} - A set with variables that are directly related to the topic of money. 
+
+Predictor Set 4 = All variables - A set with all variables because all together are high indicators of spam in our opinion.
+
+Before we trained the models we saved 30% of the data as a test set to avoid overfitting. 
+
+We trained four different Logistic Regression Models with one predictor set each. Also, we trained two Ridge Regression Models with predictor set 1 and 2 and two LASSO Regression Models with Predictor Set 3 and 4.
+Last but not least we created a Decision Tree with all variables as predictors.
+
+### Best Model
+```{r echo=FALSE}
+set.seed(777)
+#splitting data
+train.Index <- sample(1:nrow(spam), round(0.7*nrow(spam)), replace = F) 
+  spam.train <- spam[train.Index,] 
+  spam.test <- spam[-train.Index,] 
+  
+  
+y.train <- spam.train$yesno
+y.test <- spam.test$yesno
+
+y.test.num <- ifelse(y.test == "y", 1,0)
+spam.test["yesno_num"] <- c(y.test.num)
+```
+The model with the highest Accuracy and the lowest Brier Score is the LASSO Regression Model with all variables as predictors.
+The R Code for this looks like this: 
+```{r, results='hide'}
+set.seed(777)
+#set feature set
+features.all_features <- c("crl.tot_ln" , "dollar_ln" , "bang_ln" , "money_ln" , "n000_ln" , "make_ln")
+
+#set train and test data
+X.train.all_features <- model.matrix( ~ . -1, data = spam.train[, features.all_features])
+X.test.all_features <- model.matrix( ~ . -1, data = spam.test[, features.all_features])
+
+#fit LASSO Regression Model
+all_features.lasso <- glmnet(X.train.all_features, y.train, alpha= 1, family = "binomial")
+
+#selecting the optimal lambda with the lowest misclassification error
+all_features.lasso_cv <- cv.glmnet(X.train.all_features, y.train, alpha = 1, type.measure = "class", 
+                       lambda = 10^seq(-5, 1, length.out = 100), family="binomial", nfolds = 10)
+
+#make predictions
+pred.all_features.lasso <- as.vector(predict(all_features.lasso, newx = X.test.all_features,
+                                       type = "response",
+                                       s = all_features.lasso_cv$lambda.min))
+```
+As the best lambda with the lowest misclassification error we discovered 0.0027.
+
+```{r echo=FALSE, results='hide'}
+table(y.test.num)
+pred.class.log1 <- ifelse(pred.all_features.lasso > 0.5, 1, 0)
+table(pred.class.log1)
+
+Accuracy <- function(pred, real, threshold = 0.5){
+  predClass <-  ifelse(pred > threshold, 1, 0)
+  acc <- sum(predClass == real) / length(real)
+  return(acc)
+}
+Brier_Score <- function(pred, real){
+  RMSE <- sqrt(mean((real - pred)^2))
+  return(RMSE)
+}
+
+MissClass <- function(pred,real,threshold = 0.5){
+   predClass <-  ifelse(pred > threshold, 1, 0)
+   right <- sum(predClass == real)
+   wrong <- length(pred) - right
+   return(wrong)
+}
+
+Brier_Score(pred.all_features.lasso, y.test.num)
+Accuracy(pred = pred.all_features.lasso, real = y.test.num, threshold = 0.5)
+MissClass(pred = pred.all_features.lasso, real = y.test.num, threshold = 0.5)
+length(y.test)
+```
+
+After it was trained on the training data the model reached an Accuracy of 0.867, a classification Error of 0.133 and a Brier Score of 0.332 
+
+### Evaluation of prediction task
+An Accuracy of 0.867 is good but not outstanding. We still have 186 wrong classifications and declare more emails as spam than the other way around. On the one hand, this can be good because more dangerous spam mails can be intercepted. On the other hand, important e-mails could also be mistakenly viewed as spam and then overlooked.
