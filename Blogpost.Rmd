@@ -129,7 +129,7 @@ spam$make_ln <- log(spam$make_tr+0.0001)
 
 
 ### The most valuable insights from EDA
-After plotting the relationships between each predicator and the target, it can be easily notice that, generally, the less symbols there are, the more likely that the email is not a spam email. For example, from the plot "The relationship betweeen spam and crl", we can see that, if the eamil is not a spam email, the total length of words in capitals is approximately in the range of 0-400, the average length is about 100. Compared to nonspam eamils, the range of the total length of capitals words in spam emails varies between 0-750. The avarage value is almost 250. It is the same for the reltionships between other predicators and the target.
+After plotting the relationships between each predicator and the target, we can notice that, generally, the less symbols there are, the more likely that the email is not a spam email. For example, from the plot "The relationship betweeen spam and crl", we can see that, if the email is not a spam email, the total length of words in capital is approximately in the range of 0-400, the average length is about 100. Compared to nonspam emails, the range of the total length of capital words in spam emails varies between 0-750. The avarage value is abou 250. It is the same for the other reltionships between other predicators and the target.
 
 ```{r echo=FALSE}
 par(mfrow = c(1,2))
