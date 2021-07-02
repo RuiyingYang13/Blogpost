@@ -36,12 +36,12 @@ spam <- read.csv("spam7.csv", sep = ",", stringsAsFactors = T, header = T)
 ```
 ## Description of the Dataset:
 Our topic is spam email data and our task is to predict whether an email is a spam or not. The data consist of 4601 email items, of which 1813 items were identified as spam. There are 6 prediators, which are the following:
-* the total length of words in capitals (crl.tot)
-* the number of occurrences of the \$ symbol (dollar)
-* the number of occurrences of the ! symbol (bang)
-* the number of occurrences of the word ‘money’ (money)
-* the number of occurrences of the string ‘000’ (n000)
-* the number of occurrences of the word ‘make’ (make)
+1, the total length of words in capitals (crl.tot)
+2, the number of occurrences of the \$ symbol (dollar)
+3, the number of occurrences of the ! symbol (bang)
+4, the number of occurrences of the word ‘money’ (money)
+5, the number of occurrences of the string ‘000’ (n000)
+6, the number of occurrences of the word ‘make’ (make)
 and 1 target variable, which is a factor with levels n not spam, y spam (yesno).
 
 ## Problems in the Dataset:
@@ -49,9 +49,8 @@ and 1 target variable, which is a factor with levels n not spam, y spam (yesno).
 First of all, we noticed that there are many 0 values in the dataset, we have considered, if we treat them as missing values or real values. Because there are just too much 0s, for example in the column "dollar", there are more than 2 times 0 values than other values. Considering the fact that, in many emails there is just no dollar symbol, we decide to take them as real values and do not handle them.
 
 ### Missing values, outliers, skewed distribution and new features (continuous variables)
-#### Missing values
+#### Missing values and outliers
 There is no missing value in our dataset, either explicit nor implicit.
-#### Outliers
 There are many outliers. Take the column "crl.tot" as an example, we can see from the follwing plot that, the plot has a really long tail and most of the values are between 0-500.
 
 ```{r echo=FALSE, out.width = '80%', out.height = '80%', fig.align='center'}
