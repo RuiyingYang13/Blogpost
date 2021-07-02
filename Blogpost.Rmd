@@ -35,14 +35,14 @@ p_load(ggplot2,
 spam <- read.csv("spam7.csv", sep = ",", stringsAsFactors = T, header = T)
 ```
 ## Description of the Dataset:
-Our topic is spam email data and our task is to predict whether an email is a spam or not. The data consist of 4601 email items, of which 1813 items were identified as spam. There are 6 prediators, which are the following:
-1, the total length of words in capitals (crl.tot)
-2, the number of occurrences of the \$ symbol (dollar)
-3, the number of occurrences of the ! symbol (bang)
-4, the number of occurrences of the word ‘money’ (money)
-5, the number of occurrences of the string ‘000’ (n000)
-6, the number of occurrences of the word ‘make’ (make)
-and 1 target variable, which is a factor with levels n not spam, y spam (yesno).
+* Our topic is spam email data and our task is to predict whether an email is a spam or not. The data consist of 4601 email items, of which 1813 items were identified as spam. There are 6 prediators, which are the following:
+    - The total length of words in capitals (crl.tot)
+    - The number of occurrences of the \$ symbol (dollar)
+    - The number of occurrences of the ! symbol (bang)
+    - The number of occurrences of the word ‘money’ (money)
+    - The number of occurrences of the string ‘000’ (n000)
+    - The number of occurrences of the word ‘make’ (make)
+    - 1 target variable, which is a factor with levels n not spam, y spam (yesno).
 
 ## Problems in the Dataset:
 ### 0 values
