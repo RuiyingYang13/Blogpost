@@ -178,8 +178,8 @@ boxplot(money_tr~yesno,
         names    = c("NO", "YES"),
         col  = c("aquamarine4", "coral2"),
         xlab = "Are They Spam Email?",
-        ylab = "Number of Occurrences of the Word ‘money’",
-        main = "The Relationship Between Spam and the Word ‘money’",
+        ylab = "Number of Occurrences of the Word money",
+        main = "The Relationship Between Spam and the Word money",
         cex.lab  = 0.7,
         cex.main = 0.7)
 ```
@@ -193,8 +193,8 @@ boxplot(n000_tr~yesno,
         names    = c("NO", "YES"),
         col  = c("aquamarine4", "coral2"),
         xlab = "Are They Spam Email?",
-        ylab = "Number of Occurrences of the String ‘000’",
-        main = "The Relationship Between Spam and the String ‘000’",
+        ylab = "Number of Occurrences of the String 000",
+        main = "The Relationship Between Spam and the String 000",
         cex.lab  = 0.7,
         cex.main = 0.7)
 
@@ -204,8 +204,8 @@ boxplot(make_tr~yesno,
         names    = c("NO", "YES"),
         col  = c("aquamarine4", "coral2"),
         xlab = "Are They Spam Email?",
-        ylab = "Number of Occurrences of the Word ‘make’",
-        main = "The Relationship Between Spam and Word ‘make’",
+        ylab = "Number of Occurrences of the Word make",
+        main = "The Relationship Between Spam and Word make",
         cex.lab  = 0.7,
         cex.main = 0.7)
 ```
